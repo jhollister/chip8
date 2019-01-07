@@ -4,6 +4,8 @@
 
 #exec files
 bin/
+*.exe
+*.o
 
 
 # OSX files
