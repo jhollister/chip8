@@ -1,3 +1,6 @@
+#vscode files
+tasks.json
+
 #vim files
 *.swp
 *.swo
@@ -10,3 +13,4 @@ bin/
 
 # OSX files
 .DS_Store
+.vscode/tasks.json

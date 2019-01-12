@@ -2,25 +2,25 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "chip8.h"
+
 #define MAX_ROM_SIZE (0xFFF - 0x200)
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        printf("Usage: ./chip8 rom_file");
+        printf("Usage: ./chip8 <file_name>\n");
         return EXIT_FAILURE;
     }
 
-    FILE *file = fopen(argv[1], "rb");
-    uint8_t buf[MAX_ROM_SIZE] = {0};
-    fread(buf, sizeof(buf), sizeof(buf[0]), file);
-
-    for (size_t i = 0; i < sizeof(buf); i += 2) {
-        uint16_t high = buf[i] << 8;
-        uint16_t opcode = high | buf[i + 1];
-        printf("%#x\n", opcode);
+    char *file_name = argv[1];
+    Chip8 chip8 = { .memory = {0}, .cpu = {0} };
+    chip8_initialize(&chip8);
+    if (chip8_load(&chip8, file_name)) {
+        chip8_run(&chip8);
     }
-
-
-    fclose(file);
+    else {
+        printf("Error: Could not load ROM file: %s\n", file_name);
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
