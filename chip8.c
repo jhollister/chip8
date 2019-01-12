@@ -6,7 +6,7 @@
 #include <chip8.h>
 
 void chip8_initialize(Chip8 *chip8) {
-    return;
+    chip8_cpu_initialize(&chip8->cpu);
 }
 
 bool chip8_load(Chip8 *chip8, char *file_name) {
@@ -17,6 +17,7 @@ bool chip8_load(Chip8 *chip8, char *file_name) {
     }
     uint8_t *rom_start = &chip8->memory[CHIP8_ROM_START];
     int size = fread(rom_start, sizeof (rom_start[0]), CHIP8_MAX_ROM_SIZE, file);
+    fclose(file);
     if (size == 0) {
         printf("ERROR: Could not read ROM\n");
         return false;
@@ -25,5 +26,5 @@ bool chip8_load(Chip8 *chip8, char *file_name) {
 }
 
 void chip8_run(Chip8 *chip8) {
-    return;
+    while(chip8_cpu_execute(&chip8->cpu, chip8->memory));
 }

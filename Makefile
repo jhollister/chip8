@@ -2,7 +2,7 @@ CC = gcc
 
 OBJS = *.c
 
-FLAGS = -Werror -Wextra -std=c99
+FLAGS = -Werror -Wpedantic -std=c99
 
 INCLUDE = -I. -Iinclude
 
