@@ -250,63 +250,54 @@ void opcodeF(struct chip8_s *cpu, uint16_t opcode) {
         {
             printf("LD V%x, DT\t; Set V%x = delay timer value\n", reg, reg);
             cpu->v[reg] = cpu->dt;
-            cpu->pc += 1;
             break;
         }
         case 0x0A:
         {
             printf("LD V%x, K\t; Wait for a key press, store the value in V%x\n", reg, reg);
             // TODO: Wait for key press
-            cpu->pc += 1;
             break;
         }
         case 0x15:
         {
             printf("LD DT, V%x\t; Set delay timer = V%x\n", reg, reg);
             cpu->dt = cpu->v[reg];
-            cpu->pc += 1;
             break;
         }
         case 0x18:
         {
             printf("LD ST, V%x\t; Set sound timer = V%x\n", reg, reg);
             cpu->st = cpu->v[reg];
-            cpu->pc += 1;
             break;
         }
         case 0x1E:
         {
             printf("ADD I, V%x\t; Set sound timer = V%x\n", reg, reg);
             cpu->i += cpu->v[reg];
-            cpu->pc += 1;
             break;
         }
         case 0x29:
         {
             printf("LD F, V%x \t; Set I = location of sprite for digit V%x\n", reg, reg);
             // TODO: Set i to location of sprite for digit Vx?
-            cpu->pc += 1;
             break;
         }
         case  0x33:
         {
             printf("LD B, V%x\t; Store BCD representation of V%x in I\n", reg, reg);
             // TODO: Store BCD representation of Vx in memory location i, i+1, and i+2
-            cpu->pc += 1;
             break;
         }
         case 0x55:
         {
             printf("LD [I], V%x\t; Store registers V0 through V%x in I\n", reg, reg);
             // TODO: Store registers V0 through Vx in memory starting at location I
-            cpu->pc += 1;
             break;
         }
         case 0x65:
         {
             printf("LD V%x, [I]\t; Read registers V0-V%x from memory starting at I\n", reg, reg);
             // TODO: Read regisers V0 through Vx from memory starting at location I
-            cpu->pc += 1;
             break;
         }
         default:
@@ -317,4 +308,5 @@ void opcodeF(struct chip8_s *cpu, uint16_t opcode) {
         }
 
     }
+    cpu->pc += 1;
 }
