@@ -23,6 +23,5 @@ struct chip8_s {
 void cpu_initialize(struct chip8_s *chip8);
 bool cpu_execute(struct chip8_s *chip8);
 
-void chip8_initialize(struct chip8_s *chip8);
 bool chip8_load(struct chip8_s *chip8, const char *file_name);
 void chip8_run(struct chip8_s *chip8);

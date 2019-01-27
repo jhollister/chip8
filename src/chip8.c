@@ -6,12 +6,9 @@
 
 #include "chip8.h"
 
-void chip8_initialize(struct chip8_s *chip8) {
+bool chip8_load(struct chip8_s *chip8, const char *file_name) {
     srand(time(0));
     cpu_initialize(chip8);
-}
-
-bool chip8_load(struct chip8_s *chip8, const char *file_name) {
     FILE *file = fopen(file_name, "rb");
     if (file == NULL) {
         printf("ERROR: Could not open ROM\n");

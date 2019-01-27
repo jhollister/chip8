@@ -19,3 +19,5 @@ void opcodeC(struct chip8_s *cpu, uint16_t opcode);
 void opcodeD(struct chip8_s *cpu, uint16_t opcode);
 void opcodeE(struct chip8_s *cpu, uint16_t opcode);
 void opcodeF(struct chip8_s *cpu, uint16_t opcode);
+
+void clear_display(struct chip8_s *cpu);

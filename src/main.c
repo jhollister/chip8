@@ -14,7 +14,6 @@ int main(int argc, char *argv[]) {
 
     char *file_name = argv[1];
     struct chip8_s chip8;
-    chip8_initialize(&chip8);
     if (chip8_load(&chip8, file_name)) {
         chip8_run(&chip8);
     }
