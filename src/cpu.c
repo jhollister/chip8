@@ -17,13 +17,11 @@ void cpu_initialize(struct chip8_s *chip8) {
  * Returns false if invalid instruction.
  **/
 bool cpu_execute(struct chip8_s *cpu) {
-    if (cpu->pc > CHIP8_MAX_ROM_SIZE) {
+    if (cpu->pc > CHIP8_MEMORY_SIZE) {
+        printf("Program counter exceeded memory %d\n", cpu->pc);
         return false;
     }
     uint16_t opcode = (cpu->memory[cpu->pc] << 8) | cpu->memory[cpu->pc + 1];
-    if (opcode == 0) {
-        return false;
-    }
     printf("%#06x: ", opcode);
     uint8_t instr_code = (opcode & 0xF000) >> 12;
     switch (instr_code) {
@@ -63,7 +61,6 @@ bool cpu_execute(struct chip8_s *cpu) {
                  return false;
         break;
     }
-    cpu->pc += 2;
     return true;
 }
 

@@ -1,11 +1,13 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <time.h>
+#include <stdlib.h>
 
 #include "chip8.h"
 
 void chip8_initialize(struct chip8_s *chip8) {
+    srand(time(0));
     cpu_initialize(chip8);
 }
 

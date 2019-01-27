@@ -11,7 +11,7 @@
 
 struct chip8_s {
     uint8_t memory[CHIP8_MEMORY_SIZE];
-    uint8_t vx[CHIP8_REG_COUNT];
+    uint8_t v[CHIP8_REG_COUNT];
     uint8_t stack[CHIP8_STACK_SIZE];
     uint16_t i;
     uint16_t pc;
