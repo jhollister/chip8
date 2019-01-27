@@ -3,13 +3,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <chip8.h>
+#include "chip8.h"
 
-void chip8_initialize(Chip8 *chip8) {
-    chip8_cpu_initialize(&chip8->cpu);
+void chip8_initialize(struct chip8_s *chip8) {
+    cpu_initialize(chip8);
 }
 
-bool chip8_load(Chip8 *chip8, char *file_name) {
+bool chip8_load(struct chip8_s *chip8, const char *file_name) {
     FILE *file = fopen(file_name, "rb");
     if (file == NULL) {
         printf("ERROR: Could not open ROM\n");
@@ -25,6 +25,6 @@ bool chip8_load(Chip8 *chip8, char *file_name) {
     return true;
 }
 
-void chip8_run(Chip8 *chip8) {
-    while(chip8_cpu_execute(&chip8->cpu, chip8->memory));
+void chip8_run(struct chip8_s *chip8) {
+    while(cpu_execute(chip8));
 }

@@ -1,6 +1,6 @@
 CC = gcc
 
-OBJS = *.c
+OBJS = src/*.c
 
 FLAGS = -Werror -Wpedantic -std=c99
 

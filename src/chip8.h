@@ -8,7 +8,9 @@
 #define CHIP8_REG_COUNT     16
 #define CHIP8_STACK_SIZE    16
 
-typedef struct chip8_cpu_s {
+
+struct chip8_s {
+    uint8_t memory[CHIP8_MEMORY_SIZE];
     uint8_t vx[CHIP8_REG_COUNT];
     uint8_t stack[CHIP8_STACK_SIZE];
     uint16_t i;
@@ -16,16 +18,11 @@ typedef struct chip8_cpu_s {
     uint8_t sp;
     uint8_t dt;
     uint8_t st;
-} Chip8_Cpu;
+};
 
-typedef struct chip8_s {
-    uint8_t memory[CHIP8_MEMORY_SIZE];
-    Chip8_Cpu cpu;
-} Chip8;
+void cpu_initialize(struct chip8_s *chip8);
+bool cpu_execute(struct chip8_s *chip8);
 
-void chip8_cpu_initialize(Chip8_Cpu *cpu);
-bool chip8_cpu_execute(Chip8_Cpu *cpu, uint8_t *memory);
-
-void chip8_initialize(Chip8 *chip8);
-bool chip8_load(Chip8 *chip8, char *file_name);
-void chip8_run(Chip8 *chip8);
+void chip8_initialize(struct chip8_s *chip8);
+bool chip8_load(struct chip8_s *chip8, const char *file_name);
+void chip8_run(struct chip8_s *chip8);
