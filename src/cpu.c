@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "chip8.h"
+#include "opcodes.h"
 
 void cpu_initialize(struct chip8_s *chip8) {
     chip8->i = 0;
@@ -23,41 +24,40 @@ bool cpu_execute(struct chip8_s *cpu) {
     if (opcode == 0) {
         return false;
     }
-    printf("opcode: %#06x\n", opcode);
+    printf("%#06x: ", opcode);
     uint8_t instr_code = (opcode & 0xF000) >> 12;
-    printf("switching on: %x\n", instr_code);
     switch (instr_code) {
-        case 0x0: printf("SYS, CLS, RET\n");
+        case 0x0: opcode0(cpu, opcode);
         break;
-        case 0x1: printf("JMP\n");
+        case 0x1: opcode1(cpu, opcode);
         break;
-        case 0x2: printf("CALL\n");
+        case 0x2: opcode2(cpu, opcode);
         break;
-        case 0x3: printf("SE\n");
+        case 0x3: opcode3(cpu, opcode);
         break;
-        case 0x4: printf("SNE\n");
+        case 0x4: opcode4(cpu, opcode);
         break;
-        case 0x5: printf("SE\n");
+        case 0x5: opcode5(cpu, opcode);
         break;
-        case 0x6: printf("LD\n");
+        case 0x6: opcode6(cpu, opcode);
         break;
-        case 0x7: printf("ADD\n");
+        case 0x7: opcode7(cpu, opcode);
         break;
-        case 0x8: printf("LD, OR, AND, XOR, ADD, SUB, SHR, SUBN, SHL\n");
+        case 0x8: opcode8(cpu, opcode);
         break;
-        case 0x9: printf("SNE\n");
+        case 0x9: opcode9(cpu, opcode);
         break;
-        case 0xA: printf("LD\n");
+        case 0xA: opcodeA(cpu, opcode);
         break;
-        case 0xB: printf("JP\n");
+        case 0xB: opcodeB(cpu, opcode);
         break;
-        case 0xC: printf("RND\n");
+        case 0xC: opcodeC(cpu, opcode);
         break;
-        case 0xD: printf("DRW\n");
+        case 0xD: opcodeD(cpu, opcode);
         break;
-        case 0xE: printf("SKP, SKNP\n");
+        case 0xE: opcodeE(cpu, opcode);
         break;
-        case 0xF: printf("LD\n");
+        case 0xF: opcodeF(cpu, opcode);
         break;
         default: printf("Invalid opcode\n");
                  return false;
