@@ -1,7 +1,10 @@
-#pragma once
+#ifndef OPCODE_H
+#define OPCODE_H
+
 #include <stdint.h>
 
 #include "chip8.h"
+
 
 void opcode0(struct chip8_s *cpu, uint16_t opcode);
 void opcode1(struct chip8_s *cpu, uint16_t opcode);
@@ -20,4 +23,4 @@ void opcodeD(struct chip8_s *cpu, uint16_t opcode);
 void opcodeE(struct chip8_s *cpu, uint16_t opcode);
 void opcodeF(struct chip8_s *cpu, uint16_t opcode);
 
-void clear_display(struct chip8_s *cpu);
+#endif // OPCODE_H
