@@ -6,6 +6,8 @@
 
 #include "chip8.h"
 
+static int rom_size = 0;
+
 bool chip8_load(struct chip8 *chip8, const char *file_name) {
     srand(time(0));
     cpu_initialize(chip8);
@@ -15,9 +17,9 @@ bool chip8_load(struct chip8 *chip8, const char *file_name) {
         return false;
     }
     uint8_t *rom_start = &chip8->memory[CHIP8_ROM_START];
-    int size = fread(rom_start, sizeof (rom_start[0]), CHIP8_MAX_ROM_SIZE, file);
+    rom_size = fread(rom_start, sizeof (rom_start[0]), CHIP8_MAX_ROM_SIZE, file);
     fclose(file);
-    if (size == 0) {
+    if (rom_size == 0) {
         printf("ERROR: Could not read ROM\n");
         return false;
     }
@@ -31,8 +33,10 @@ bool chip8_load(struct chip8 *chip8, const char *file_name) {
 void chip8_disassemble(struct chip8 *chip8) {
     uint16_t prev_pc = chip8->pc;
     // execute but ignore any pc changes the cpu makes
-    while (cpu_execute(chip8) && prev_pc < CHIP8_MAX_ROM_SIZE) {
+    while (cpu_execute(chip8) && (prev_pc-CHIP8_ROM_START) < rom_size) {
+        // printf("PC: %x\n", chip8->pc);
         chip8->pc = prev_pc + 1;
+        prev_pc = chip8->pc;
     }
 
 }

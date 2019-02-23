@@ -224,7 +224,7 @@ void op_ld_i_addr(struct chip8 *cpu, uint16_t addr) {
  * OPCODE: Bnnn - JMP V0, addr
  */
 void op_jmp_v0_addr(struct chip8 *cpu, uint16_t addr) {
-    printf("JMP V0, %d\t; Jump to location %d + value in V0\n");
+    printf("JMP V0, %d\t; Jump to location %d + value in V0\n", addr, addr);
     cpu->pc = cpu->v[0] + addr;
 }
 
@@ -232,7 +232,7 @@ void op_jmp_v0_addr(struct chip8 *cpu, uint16_t addr) {
  * OPCODE: Cxkk - RND Vx, val
  */
 void op_rnd_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
-    printf("RND V%x, %d\t; Set V%x = %d & RAND\n");
+    printf("RND V%x, %d\t; Set V%x = %d & RAND\n", reg, val, reg, val);
     cpu->v[reg] = (uint8_t)(rand() % 255) & val;
     cpu->pc += 1;
 }
