@@ -12,7 +12,7 @@
 #define CHIP8_DISP_PIXELS   (CHIP8_DISP_WIDTH * CHIP8_DISP_HEIGHT)
 
 
-struct chip8_s {
+struct chip8 {
     uint8_t memory[CHIP8_MEMORY_SIZE];
     uint8_t v[CHIP8_REG_COUNT];
     uint8_t stack[CHIP8_STACK_SIZE];
@@ -24,8 +24,9 @@ struct chip8_s {
     uint8_t st;
 };
 
-void cpu_initialize(struct chip8_s *chip8);
-bool cpu_execute(struct chip8_s *chip8);
+void cpu_initialize(struct chip8 *chip8);
+bool cpu_execute(struct chip8 *chip8);
 
-bool chip8_load(struct chip8_s *chip8, const char *file_name);
-void chip8_run(struct chip8_s *chip8);
+bool chip8_load(struct chip8 *chip8, const char *file_name);
+void chip8_run(struct chip8 *chip8);
+void chip8_disassemble(struct chip8 *chip8);
