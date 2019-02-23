@@ -4,10 +4,10 @@
 #include "chip8.h"
 #include "opcodes.h"
 
-#define REGX(x) ( (x & 0x0F00) >> 8 )
-#define REGY(y) ( (y & 0x00F0) >> 4 )
-#define VAL(x) ( x & 0x00FF )
-#define ADDR(x) (x & 0x0FFF )
+#define REGX(x) ((x & 0x0F00) >> 8)
+#define REGY(y) ((y & 0x00F0) >> 4)
+#define VAL(x) (x & 0x00FF)
+#define ADDR(x) (x & 0x0FFF)
 
 
 /*
@@ -24,6 +24,9 @@ void op_sys_addr(struct chip8_s *cpu, uint16_t addr) {
 void op_cls(struct chip8_s *cpu) {
     // TODO: Clear display buffer
     printf("CLS\t; Clear display\n");
+    for (int i = 0; i < CHIP8_DISP_PIXELS; i++) {
+        cpu->display[i] = 0;
+    }
     cpu->pc += 1;
 }
 
