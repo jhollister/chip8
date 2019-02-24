@@ -22,7 +22,6 @@ void op_sys_addr(struct chip8 *cpu, uint16_t addr) {
  * OPCODE: 00E0 - CLS
  */
 void op_cls(struct chip8 *cpu) {
-    // TODO: Clear display buffer
     printf("CLS\t; Clear display\n");
     for (int i = 0; i < CHIP8_DISP_PIXELS; i++) {
         cpu->display[i] = 0;
@@ -35,7 +34,13 @@ void op_cls(struct chip8 *cpu) {
  */
 void op_ret(struct chip8 *cpu) {
     printf("RET\t; Return from subroutine\n");
-    cpu->pc = cpu->stack[(cpu->sp)--];
+    if (cpu->sp > 0) {
+        cpu->pc = cpu->stack[(cpu->sp)--];
+    }
+    else {
+        fprintf(stderr, "ERROR op_ret: Nothing to return to\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 /*
@@ -51,8 +56,14 @@ void op_jmp(struct chip8 *cpu, uint16_t addr) {
  */
 void op_call_addr(struct chip8 *cpu, uint16_t addr) {
     printf("CALL %#5x\t; Call subroutine at %#5x\n", addr, addr);
-    cpu->stack[++(cpu->sp)] = cpu->pc;
-    cpu->pc = addr;
+    if (cpu->sp < CHIP8_STACK_SIZE) {
+        cpu->stack[(cpu->sp)++] = cpu->pc;
+        cpu->pc = addr;
+    }
+    else {
+        fprintf(stderr, "ERROR op_call_addr: Stack overflow\n");
+        exit(EXIT_FAILURE);
+    }
 }
 
 /*
@@ -153,8 +164,10 @@ void op_xor_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
  */
 void op_add_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("ADD V%x, V%x\t; Set V%x += V%x\n", regx, regy, regx, regy);
-    // TODO: Vf set on carry
-    cpu->v[regx] += cpu->v[regy];
+    uint16_t result = (uint16_t) cpu->v[regx] + cpu->v[regy];
+    /* Set Vf on overflow */
+    cpu->v[0xF] = result > 0xFF ? 1 : 0;
+    cpu->v[regx] = (uint8_t) result;
     cpu->pc += 1;
 }
 
@@ -163,7 +176,8 @@ void op_add_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
  */
 void op_sub_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SUB V%x, V%x\t; Set V%x -= V%x\n", regx, regy, regx, regy);
-    // TODO: Vf set when there's a borrow
+    /* Set Vf when no borrow */
+    cpu->v[0xF] = cpu->v[regx] > cpu->v[regy] ? 1 : 0;
     cpu->v[regx] -= cpu->v[regy];
     cpu->pc += 1;
 }
@@ -173,7 +187,8 @@ void op_sub_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
  */
 void op_shr_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SHR V%x, V%x\t; Set V%x >>= 1\n", regx, regy, regx);
-    // TODO: Store least sig bit of vx in vf
+    /* Set Vf if least significant bit of Vx is 1 */
+    cpu->v[0xF] = cpu->v[regx] & 1;
     cpu->v[regx] >>= 1;
     cpu->pc += 1;
 }
@@ -183,7 +198,8 @@ void op_shr_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
  */
 void op_subn_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SUBN V%x, V%x\t; Set V%x = V%x - V%x\n", regx, regy, regx, regy, regx);
-    // TODO: Vf borrow flag
+    /* If Vy > Vx set Vf */
+    cpu->v[0xF] = cpu->v[regy] > cpu->v[regx] ? 1 : 0;
     cpu->v[regx] = cpu->v[regy] - cpu->v[regx];
     cpu->pc += 1;
 }
@@ -193,8 +209,9 @@ void op_subn_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
  */
 void op_shl_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SHL V%x, V%x\t; Set V%x <<= 1\n", regx, regy, regx, regy);
-    // TODO: Vf most sig digit
-    cpu->v[regy] <<= 1;
+    /* set Vf if most significant digit of Vx is 1 */
+    cpu->v[0xF] = cpu->v[regx] & 0x80;
+    cpu->v[regx] <<= 1;
     cpu->pc += 1;
 }
 
@@ -224,7 +241,7 @@ void op_ld_i_addr(struct chip8 *cpu, uint16_t addr) {
  * OPCODE: Bnnn - JMP V0, addr
  */
 void op_jmp_v0_addr(struct chip8 *cpu, uint16_t addr) {
-    printf("JMP V0, %d\t; Jump to location %d + value in V0\n", addr, addr);
+    printf("JMP V0, %#5x\t; Jump to location %#5x + value in V0\n", addr, addr);
     cpu->pc = cpu->v[0] + addr;
 }
 
@@ -243,7 +260,21 @@ void op_rnd_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
 void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t nibble) {
     printf("DRW V%x, V%x, %d\t; Display %d-byte sprite at memory location I at (V%x, V%x)\n",
             regx, regy, nibble, nibble, regx, regy);
-    // TODO: Draw sprites
+    bool pixel_erased = false; /* set if any pixel is flipped from 1 to 0 */
+    uint16_t addr = cpu->i;
+    uint8_t x_pos = cpu->v[regx];
+    uint8_t y_pos = cpu->v[regy];
+    uint8_t *display = cpu->display;
+    uint8_t sprite_row = cpu->memory[addr++];
+    for (int i = 0; i < nibble; i++) {
+        while (sprite_row) {
+            display[y_pos*CHIP8_DISP_WIDTH + x_pos] ^= sprite_row & 0x01;
+            sprite_row >>= 1;
+            x_pos = (x_pos + 1) % CHIP8_DISP_WIDTH;
+        }
+        sprite_row = cpu->memory[addr++];
+        y_pos = (y_pos + 1) % CHIP8_DISP_HEIGHT;
+    }
     cpu->pc += 1;
 }
 
@@ -252,8 +283,7 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
  */
 void op_skp_vx(struct chip8 *cpu, uint8_t reg) {
     printf("SKP V%x\t; Skip next instruction if key pressed with value of V%x\n", reg, reg);
-    // TODO: Skip with keys
-    cpu->pc += 1;
+    cpu->pc = (cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2 : cpu->pc + 1;
 }
 
 /*
@@ -261,8 +291,7 @@ void op_skp_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_sknp_vx(struct chip8 *cpu, uint8_t reg) {
     printf("SKNP V%x\t; Skip next instruction if key not pressed with value of V%x\n", reg, reg);
-    // TODO: Skip with keys
-    cpu->pc += 1;
+    cpu->pc = !(cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2 : cpu->pc + 1;
 }
 
 /*
@@ -279,8 +308,20 @@ void op_ld_vx_dt(struct chip8 *cpu, uint8_t reg) {
  */
 void op_ld_vx_k(struct chip8 *cpu, uint8_t reg) {
     printf("LD V%x, K\t; Wait for a key press, store the value in V%x\n", reg, reg);
-    // TODO: Wait for key press
-    cpu->pc += 1;
+    uint16_t keys = cpu->keys;
+    if (keys) {
+        for (int i = 0; keys; i++) {
+            if (keys & 1) {
+                // set register to the value of the key pressed
+                cpu->v[reg] = i;
+                // just return since a key was pressed
+                return;
+            }
+            keys >> 1;
+        }
+        cpu->pc += 1;
+    }
+    /* Return without changing pc to wait for a key press */
 }
 
 /*
@@ -315,7 +356,11 @@ void op_add_i_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_ld_f_vx(struct chip8 *cpu, uint8_t reg) {
     printf("LD F, V%x \t; Set I = location of sprite for digit V%x\n", reg, reg);
-    // TODO: Set i to location of sprite for digit Vx?
+    if (cpu->v[reg] > 0xF) {
+        fprintf(stderr, "ERROR op_ld_f_vs: Invalid sprite location");
+        exit(EXIT_FAILURE);
+    }
+    cpu->i = cpu->v[reg]*CHIP8_FONT_HEIGHT;
     cpu->pc += 1;
 }
 
@@ -324,7 +369,13 @@ void op_ld_f_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_ld_b_vx(struct chip8 *cpu, uint8_t reg) {
     printf("LD B, V%x\t; Store BCD representation of V%x in I\n", reg, reg);
-    // TODO: Store BCD representation of Vx in memory location i, i+1, and i+2
+    uint16_t i = cpu->i + 2;
+    uint8_t num = cpu->v[reg];
+    /* Note: since Vx is 8-bit value we don't worry about any number over 3 digits */
+    while (num) {
+        cpu->memory[i--] = num % 10;
+        num /= 10;
+    }
     cpu->pc += 1;
 }
 
@@ -333,7 +384,11 @@ void op_ld_b_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_ld_i_vx(struct chip8 *cpu, uint8_t reg) {
     printf("LD [I], V%x\t; Store registers V0 through V%x in I\n", reg, reg);
-    // TODO: Store registers V0 through Vx in memory starting at location I
+    // Store registers V0 through Vx in memory starting at location I
+    uint16_t i = cpu->i;
+    for (int x = 0; x <= reg; x++) {
+        cpu->memory[i++] = cpu->v[x];
+    }
     cpu->pc += 1;
 }
 
@@ -342,7 +397,11 @@ void op_ld_i_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_ld_vx_i(struct chip8 *cpu, uint8_t reg) {
     printf("LD V%x, [I]\t; Read registers V0-V%x from memory starting at I\n", reg, reg);
-    // TODO: Read regisers V0 through Vx from memory starting at location I
+    // Read regisers V0 through Vx from memory starting at location I
+    uint16_t i = cpu->i;
+    for (int x = 0; x <= reg; x++) {
+        cpu->v[x] = cpu->memory[i++];
+    }
     cpu->pc += 1;
 }
 

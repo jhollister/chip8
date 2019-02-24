@@ -6,7 +6,6 @@
 #include "chip8.h"
 #include "opcodes.h"
 
-#define NELEMS(arr) (sizeof(arr)/sizeof(arr[0]))
 
 #define CHIP8_FONTSET_SIZE 80
 const uint8_t chip8_fonts[] = {
@@ -53,13 +52,12 @@ void cpu_initialize(struct chip8 *chip8) {
     chip8->sp = 0;
     chip8->dt = 0;
     chip8->st = 0;
+    chip8->keys = 0;
     memset(chip8->memory, 0, sizeof(chip8->memory));
     memset(chip8->v, 0, sizeof(chip8->v));
     memset(chip8->stack, 0, sizeof(chip8->stack));
     memset(chip8->display, 0, sizeof(chip8->display));
-    for (int i = 0; i < NELEMS(chip8_fonts); i++) {
-        chip8->memory[i] = chip8_fonts[i];
-    }
+    memcpy(chip8->memory, chip8_fonts, sizeof(chip8_fonts));
     assert(chip8->memory[0] == 0xF0);
     assert(chip8->memory[CHIP8_FONTSET_SIZE-1] == 0x80);
 }
@@ -70,11 +68,11 @@ void cpu_initialize(struct chip8 *chip8) {
  **/
 bool cpu_execute(struct chip8 *cpu) {
     if (cpu->pc > CHIP8_MEMORY_SIZE) {
-        printf("Program counter exceeded memory %d\n", cpu->pc);
+        fprintf(stderr, "Program counter exceeded memory %d\n", cpu->pc);
         return false;
     }
     uint16_t opcode = (cpu->memory[cpu->pc] << 8) | cpu->memory[cpu->pc + 1];
-    printf("%#06x: ", opcode);
+    printf("%#06x: ", cpu->pc);
     uint8_t instr_code = (opcode & 0xF000) >> 12;
     opcode_handler[instr_code](cpu, opcode);
     return true;
