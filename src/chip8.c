@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "chip8.h"
+#include "chip8_gfx.h"
 
 static int rom_size = 0;
 
@@ -18,6 +19,7 @@ bool chip8_load(struct chip8 *chip8, const char *file_name) {
     }
     uint8_t *rom_start = &chip8->memory[CHIP8_ROM_START];
     rom_size = fread(rom_start, sizeof (rom_start[0]), CHIP8_MAX_ROM_SIZE, file);
+    printf("Read file: %s size: %d bytes\n", file_name, rom_size);
     fclose(file);
     if (rom_size == 0) {
         printf("ERROR: Could not read ROM\n");
@@ -42,5 +44,9 @@ void chip8_disassemble(struct chip8 *chip8) {
 }
 
 void chip8_run(struct chip8 *chip8) {
-    while(cpu_execute(chip8));
+    gfx_init();
+    while(cpu_execute(chip8)) {
+        gfx_update(chip8->display);
+    }
+    gfx_quit();
 }

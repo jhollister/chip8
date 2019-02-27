@@ -9,13 +9,15 @@
 #define VAL(x) (x & 0x00FF)
 #define ADDR(x) (x & 0x0FFF)
 
+#define PC_STEP 2
+
 
 /*
  * OPCODE: 0nnn - SYS addr
  */
 void op_sys_addr(struct chip8 *cpu, uint16_t addr) {
     printf("SYS %#5x\t; Ignored\n", addr);
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -26,7 +28,7 @@ void op_cls(struct chip8 *cpu) {
     for (int i = 0; i < CHIP8_DISP_PIXELS; i++) {
         cpu->display[i] = 0;
     }
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -35,7 +37,7 @@ void op_cls(struct chip8 *cpu) {
 void op_ret(struct chip8 *cpu) {
     printf("RET\t; Return from subroutine\n");
     if (cpu->sp > 0) {
-        cpu->pc = cpu->stack[(cpu->sp)--];
+        cpu->pc = cpu->stack[--(cpu->sp)];
     }
     else {
         fprintf(stderr, "ERROR op_ret: Nothing to return to\n");
@@ -72,10 +74,10 @@ void op_call_addr(struct chip8 *cpu, uint16_t addr) {
 void op_se_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
     printf("SE V%x, %d\t; Skip next instruction if V%x == %d\n", reg, val, reg, val);
     if (cpu->v[reg] == val) {
-        cpu->pc += 2;
+        cpu->pc += 2*PC_STEP;
     }
     else {
-        cpu->pc += 1;
+        cpu->pc += PC_STEP;
     }
 }
 
@@ -85,10 +87,10 @@ void op_se_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
 void op_sne_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
     printf("SNE V%x, %d\t; Skip next instruction if V%x != %d\n", reg, val, reg, val);
     if (cpu->v[reg] != val) {
-        cpu->pc += 2;
+        cpu->pc += 2*PC_STEP;
     }
     else {
-        cpu->pc += 1;
+        cpu->pc += PC_STEP;
     }
 }
 
@@ -98,10 +100,10 @@ void op_sne_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
 void op_se_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SE V%x, V%x\t; Skip next instruction if V%x == V%x\n", regx, regy, regx, regy);
     if (cpu->v[regx] == cpu->v[regy]) {
-        cpu->pc += 2;
+        cpu->pc += 2*PC_STEP;
     }
     else {
-        cpu->pc += 1;
+        cpu->pc += PC_STEP;
     }
 }
 
@@ -111,7 +113,7 @@ void op_se_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_ld_vx_val(struct chip8 *cpu, uint8_t reg, uint16_t val) {
     printf("LD V%x, %d\t; Set V%x = %d\n", reg, val, reg, val);
     cpu->v[reg] = val;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -120,7 +122,7 @@ void op_ld_vx_val(struct chip8 *cpu, uint8_t reg, uint16_t val) {
 void op_add_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
     printf("ADD V%x, %d\t; Set V%x += %d\n", reg, val, reg, val);
     cpu->v[reg] += val;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -129,7 +131,7 @@ void op_add_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
 void op_ld_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("LD V%x, V%x\t; Set V%x = V%x\n", regx, regy, regx, regy);
     cpu->v[regx] = cpu->v[regy];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -138,7 +140,7 @@ void op_ld_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_or_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("OR V%x, V%x\t; Set V%x |= V%x\n", regx, regy, regx, regy);
     cpu->v[regx] |= cpu->v[regy];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -147,7 +149,7 @@ void op_or_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_and_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("AND V%x, V%x\t; Set V%x &= V%x\n", regx, regy, regx, regy);
     cpu->v[regx] &= cpu->v[regy];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -156,7 +158,7 @@ void op_and_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_xor_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("XOR V%x, V%x\t; Set V%x ^= V%x\n", regx, regy, regx, regy);
     cpu->v[regx] ^= cpu->v[regy];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -168,7 +170,7 @@ void op_add_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     /* Set Vf on overflow */
     cpu->v[0xF] = result > 0xFF ? 1 : 0;
     cpu->v[regx] = (uint8_t) result;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -179,7 +181,7 @@ void op_sub_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     /* Set Vf when no borrow */
     cpu->v[0xF] = cpu->v[regx] > cpu->v[regy] ? 1 : 0;
     cpu->v[regx] -= cpu->v[regy];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -190,7 +192,7 @@ void op_shr_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     /* Set Vf if least significant bit of Vx is 1 */
     cpu->v[0xF] = cpu->v[regx] & 1;
     cpu->v[regx] >>= 1;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -201,7 +203,7 @@ void op_subn_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     /* If Vy > Vx set Vf */
     cpu->v[0xF] = cpu->v[regy] > cpu->v[regx] ? 1 : 0;
     cpu->v[regx] = cpu->v[regy] - cpu->v[regx];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -212,7 +214,7 @@ void op_shl_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     /* set Vf if most significant digit of Vx is 1 */
     cpu->v[0xF] = cpu->v[regx] & 0x80;
     cpu->v[regx] <<= 1;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -221,10 +223,10 @@ void op_shl_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_sne_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SNE V%x, V%x\t; Skip next instruction if V%x == V%x\n", regx, regy, regx, regy);
     if (cpu->v[regx] != cpu->v[regy]) {
-        cpu->pc += 2;
+        cpu->pc += 2*PC_STEP;
     }
     else {
-        cpu->pc += 1;
+        cpu->pc += PC_STEP;
     }
 }
 
@@ -234,7 +236,7 @@ void op_sne_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_ld_i_addr(struct chip8 *cpu, uint16_t addr) {
     printf("LD I, %#5x\t; Set I = %#5x\n", addr, addr);
     cpu->i = addr;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -251,7 +253,7 @@ void op_jmp_v0_addr(struct chip8 *cpu, uint16_t addr) {
 void op_rnd_vx_val(struct chip8 *cpu, uint8_t reg, uint8_t val) {
     printf("RND V%x, %d\t; Set V%x = %d & RAND\n", reg, val, reg, val);
     cpu->v[reg] = (uint8_t)(rand() % 255) & val;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -275,7 +277,7 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
         sprite_row = cpu->memory[addr++];
         y_pos = (y_pos + 1) % CHIP8_DISP_HEIGHT;
     }
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -300,7 +302,7 @@ void op_sknp_vx(struct chip8 *cpu, uint8_t reg) {
 void op_ld_vx_dt(struct chip8 *cpu, uint8_t reg) {
     printf("LD V%x, DT\t; Set V%x = delay timer value\n", reg, reg);
     cpu->v[reg] = cpu->dt;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -319,7 +321,7 @@ void op_ld_vx_k(struct chip8 *cpu, uint8_t reg) {
             }
             keys >> 1;
         }
-        cpu->pc += 1;
+        cpu->pc += PC_STEP;
     }
     /* Return without changing pc to wait for a key press */
 }
@@ -330,7 +332,7 @@ void op_ld_vx_k(struct chip8 *cpu, uint8_t reg) {
 void op_ld_dt_vx(struct chip8 *cpu, uint8_t reg) {
     printf("LD DT, V%x\t; Set delay timer = V%x\n", reg, reg);
     cpu->dt = cpu->v[reg];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -339,7 +341,7 @@ void op_ld_dt_vx(struct chip8 *cpu, uint8_t reg) {
 void op_ld_st_vx(struct chip8 *cpu, uint8_t reg) {
     printf("LD ST, V%x\t; Set sound timer = V%x\n", reg, reg);
     cpu->st = cpu->v[reg];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -348,7 +350,7 @@ void op_ld_st_vx(struct chip8 *cpu, uint8_t reg) {
 void op_add_i_vx(struct chip8 *cpu, uint8_t reg) {
     printf("ADD I, V%x\t; Set sound timer = V%x\n", reg, reg);
     cpu->i += cpu->v[reg];
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -361,7 +363,7 @@ void op_ld_f_vx(struct chip8 *cpu, uint8_t reg) {
         exit(EXIT_FAILURE);
     }
     cpu->i = cpu->v[reg]*CHIP8_FONT_HEIGHT;
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -376,7 +378,7 @@ void op_ld_b_vx(struct chip8 *cpu, uint8_t reg) {
         cpu->memory[i--] = num % 10;
         num /= 10;
     }
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -389,7 +391,7 @@ void op_ld_i_vx(struct chip8 *cpu, uint8_t reg) {
     for (int x = 0; x <= reg; x++) {
         cpu->memory[i++] = cpu->v[x];
     }
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 /*
@@ -402,7 +404,7 @@ void op_ld_vx_i(struct chip8 *cpu, uint8_t reg) {
     for (int x = 0; x <= reg; x++) {
         cpu->v[x] = cpu->memory[i++];
     }
-    cpu->pc += 1;
+    cpu->pc += PC_STEP;
 }
 
 void opcode0(struct chip8 *cpu, uint16_t opcode) {

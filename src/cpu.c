@@ -72,7 +72,7 @@ bool cpu_execute(struct chip8 *cpu) {
         return false;
     }
     uint16_t opcode = (cpu->memory[cpu->pc] << 8) | cpu->memory[cpu->pc + 1];
-    printf("%#06x: ", cpu->pc);
+    printf("%#06x: opcode: %#05x ", cpu->pc, opcode);
     uint8_t instr_code = (opcode & 0xF000) >> 12;
     opcode_handler[instr_code](cpu, opcode);
     return true;

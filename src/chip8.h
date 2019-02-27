@@ -16,7 +16,7 @@
 struct chip8 {
     uint8_t memory[CHIP8_MEMORY_SIZE];
     uint8_t v[CHIP8_REG_COUNT];
-    uint8_t stack[CHIP8_STACK_SIZE];
+    uint16_t stack[CHIP8_STACK_SIZE];
     uint8_t display[CHIP8_DISP_PIXELS];
     /* keys is set in chip8_run() using gfx lib, each bit represents one of 16 keys */
     uint16_t keys;
