@@ -44,9 +44,25 @@ void chip8_disassemble(struct chip8 *chip8) {
 }
 
 void chip8_run(struct chip8 *chip8) {
-    gfx_init();
+    // gfx_init();
     while(cpu_execute(chip8)) {
-        gfx_update(chip8->display);
+        // gfx_update(chip8->display);
     }
-    gfx_quit();
+    // gfx_quit();
+}
+
+void chip8_dbg_drw(struct chip8 *chip8) {
+    uint8_t *disp = chip8->display;
+    for (int y = 0; y < CHIP8_DISP_HEIGHT; y++) {
+        for (int x = 0; x < CHIP8_DISP_WIDTH; x++) {
+            if (disp[y*CHIP8_DISP_WIDTH+x]) {
+                printf("X");
+            }
+            else {
+                printf(" ");
+            }
+        }
+        printf("\n");
+    }
+    while (getchar() != '\n');
 }

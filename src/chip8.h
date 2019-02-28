@@ -33,3 +33,4 @@ bool cpu_execute(struct chip8 *chip8);
 bool chip8_load(struct chip8 *chip8, const char *file_name);
 void chip8_run(struct chip8 *chip8);
 void chip8_disassemble(struct chip8 *chip8);
+void chip8_dbg_drw(struct chip8 *chip8);

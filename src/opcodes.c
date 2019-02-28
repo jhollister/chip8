@@ -8,6 +8,7 @@
 #define REGY(y) ((y & 0x00F0) >> 4)
 #define VAL(x) (x & 0x00FF)
 #define ADDR(x) (x & 0x0FFF)
+#define COORD(x, y) (y*CHIP8_DISP_WIDTH + x)
 
 #define PC_STEP 2
 
@@ -269,8 +270,12 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
     uint8_t *display = cpu->display;
     uint8_t sprite_row = cpu->memory[addr++];
     for (int i = 0; i < nibble; i++) {
-        while (sprite_row) {
-            display[y_pos*CHIP8_DISP_WIDTH + x_pos] ^= sprite_row & 0x01;
+        // for each bit
+        for (int j = 0; j < 8; j++) {
+            if (display[COORD(x_pos, y_pos)] && !(sprite_row & 0x01)) {
+                pixel_erased = true;
+            }
+            display[COORD(x_pos, y_pos)] ^= sprite_row & 0x01;
             sprite_row >>= 1;
             x_pos = (x_pos + 1) % CHIP8_DISP_WIDTH;
         }
@@ -278,6 +283,7 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
         y_pos = (y_pos + 1) % CHIP8_DISP_HEIGHT;
     }
     cpu->pc += PC_STEP;
+    // chip8_dbg_drw(cpu);
 }
 
 /*
@@ -316,8 +322,6 @@ void op_ld_vx_k(struct chip8 *cpu, uint8_t reg) {
             if (keys & 1) {
                 // set register to the value of the key pressed
                 cpu->v[reg] = i;
-                // just return since a key was pressed
-                return;
             }
             keys >> 1;
         }
@@ -374,7 +378,7 @@ void op_ld_b_vx(struct chip8 *cpu, uint8_t reg) {
     uint16_t i = cpu->i + 2;
     uint8_t num = cpu->v[reg];
     /* Note: since Vx is 8-bit value we don't worry about any number over 3 digits */
-    while (num) {
+    for (int count = 0; count < 3; count++) {
         cpu->memory[i--] = num % 10;
         num /= 10;
     }
