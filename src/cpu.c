@@ -62,6 +62,21 @@ void cpu_initialize(struct chip8 *chip8) {
     assert(chip8->memory[CHIP8_FONTSET_SIZE-1] == 0x80);
 }
 
+// TODO: Implement actual timing
+void cpu_update_timers(struct chip8 *cpu) {
+    static int update_count = 0;
+    // every 100 cpu ticks (because why not)
+    if (update_count == 100) {
+        if (cpu->dt) cpu->dt--;
+        if (cpu->st) {
+            cpu->st--;
+            printf("BEEP\n");
+        }
+        update_count = 0;
+    }
+    update_count++;
+}
+
 /**
  * Executes a single instruction of the cpu pointed at by pc, the program counter.
  * Returns false if invalid instruction.
@@ -75,6 +90,7 @@ bool cpu_execute(struct chip8 *cpu) {
     printf("%#06x: opcode: %#05x ", cpu->pc, opcode);
     uint8_t instr_code = (opcode & 0xF000) >> 12;
     opcode_handler[instr_code](cpu, opcode);
+    cpu_update_timers(cpu);
     return true;
 }
 

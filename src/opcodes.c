@@ -60,7 +60,7 @@ void op_jmp(struct chip8 *cpu, uint16_t addr) {
 void op_call_addr(struct chip8 *cpu, uint16_t addr) {
     printf("CALL %#5x\t; Call subroutine at %#5x\n", addr, addr);
     if (cpu->sp < CHIP8_STACK_SIZE) {
-        cpu->stack[(cpu->sp)++] = cpu->pc;
+        cpu->stack[(cpu->sp)++] = cpu->pc + PC_STEP;
         cpu->pc = addr;
     }
     else {
@@ -213,7 +213,7 @@ void op_subn_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
 void op_shl_vx_vy(struct chip8 *cpu, uint8_t regx, uint8_t regy) {
     printf("SHL V%x, V%x\t; Set V%x <<= 1\n", regx, regy, regx, regy);
     /* set Vf if most significant digit of Vx is 1 */
-    cpu->v[0xF] = cpu->v[regx] & 0x80;
+    cpu->v[0xF] = cpu->v[regx] & 0x80 ? 1 : 0;
     cpu->v[regx] <<= 1;
     cpu->pc += PC_STEP;
 }
@@ -272,18 +272,20 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
     for (int i = 0; i < nibble; i++) {
         // for each bit
         for (int j = 0; j < 8; j++) {
-            if (display[COORD(x_pos, y_pos)] && !(sprite_row & 0x01)) {
+            if (display[COORD(x_pos, y_pos)] && !(sprite_row & 0x80)) {
                 pixel_erased = true;
             }
-            display[COORD(x_pos, y_pos)] ^= sprite_row & 0x01;
-            sprite_row >>= 1;
+            display[COORD(x_pos, y_pos)] ^= sprite_row & 0x80;
+            sprite_row <<= 1;
             x_pos = (x_pos + 1) % CHIP8_DISP_WIDTH;
         }
+        x_pos = cpu->v[regx];
         sprite_row = cpu->memory[addr++];
         y_pos = (y_pos + 1) % CHIP8_DISP_HEIGHT;
     }
     cpu->pc += PC_STEP;
-    // chip8_dbg_drw(cpu);
+    cpu->v[0xF] = pixel_erased ? 1 : 0;
+    chip8_dbg_drw(cpu);
 }
 
 /*
@@ -291,7 +293,7 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
  */
 void op_skp_vx(struct chip8 *cpu, uint8_t reg) {
     printf("SKP V%x\t; Skip next instruction if key pressed with value of V%x\n", reg, reg);
-    cpu->pc = (cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2 : cpu->pc + 1;
+    cpu->pc = (cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2*PC_STEP : cpu->pc + PC_STEP;
 }
 
 /*
@@ -299,7 +301,7 @@ void op_skp_vx(struct chip8 *cpu, uint8_t reg) {
  */
 void op_sknp_vx(struct chip8 *cpu, uint8_t reg) {
     printf("SKNP V%x\t; Skip next instruction if key not pressed with value of V%x\n", reg, reg);
-    cpu->pc = !(cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2 : cpu->pc + 1;
+    cpu->pc = !(cpu->keys & (1 << cpu->v[reg])) ? cpu->pc + 2*PC_STEP : cpu->pc + PC_STEP;
 }
 
 /*
@@ -318,7 +320,7 @@ void op_ld_vx_k(struct chip8 *cpu, uint8_t reg) {
     printf("LD V%x, K\t; Wait for a key press, store the value in V%x\n", reg, reg);
     uint16_t keys = cpu->keys;
     if (keys) {
-        for (int i = 0; keys; i++) {
+        for (int i = 0; i < sizeof(keys)*8; i++) {
             if (keys & 1) {
                 // set register to the value of the key pressed
                 cpu->v[reg] = i;
@@ -361,9 +363,9 @@ void op_add_i_vx(struct chip8 *cpu, uint8_t reg) {
  * OPCODE: Fx29 - LD F, Vx
  */
 void op_ld_f_vx(struct chip8 *cpu, uint8_t reg) {
-    printf("LD F, V%x \t; Set I = location of sprite for digit V%x\n", reg, reg);
+    printf("LD F, V%x \t; Set I = location of sprite for digit in V%x\n", reg, reg);
     if (cpu->v[reg] > 0xF) {
-        fprintf(stderr, "ERROR op_ld_f_vs: Invalid sprite location");
+        fprintf(stderr, "ERROR op_ld_f_vs: Invalid sprite value %d\n", cpu->v[reg]);
         exit(EXIT_FAILURE);
     }
     cpu->i = cpu->v[reg]*CHIP8_FONT_HEIGHT;

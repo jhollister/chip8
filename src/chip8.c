@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "chip8.h"
 #include "chip8_gfx.h"
@@ -47,6 +48,8 @@ void chip8_run(struct chip8 *chip8) {
     // gfx_init();
     while(cpu_execute(chip8)) {
         // gfx_update(chip8->display);
+        // random key press
+        chip8->keys = (uint16_t)(rand() % 0xFFFF);
     }
     // gfx_quit();
 }
@@ -56,7 +59,7 @@ void chip8_dbg_drw(struct chip8 *chip8) {
     for (int y = 0; y < CHIP8_DISP_HEIGHT; y++) {
         for (int x = 0; x < CHIP8_DISP_WIDTH; x++) {
             if (disp[y*CHIP8_DISP_WIDTH+x]) {
-                printf("X");
+                printf("*");
             }
             else {
                 printf(" ");
@@ -64,5 +67,6 @@ void chip8_dbg_drw(struct chip8 *chip8) {
         }
         printf("\n");
     }
-    while (getchar() != '\n');
+    for (int i = 0; i < 0xFFFFFFF; i++);
+    // while (getchar() != '\n');
 }
