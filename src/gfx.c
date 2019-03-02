@@ -71,7 +71,7 @@ void gfx_check_events(uint16_t *keys) {
                 }
                 break;
             default:
-                SDL_Log("Unknow SDL event\n");
+                // SDL_Log("Unknow SDL event\n");
                 break;
         }
     }

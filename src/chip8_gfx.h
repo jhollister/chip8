@@ -8,7 +8,7 @@
 #include <SDL2/SDL.h>
 
 // The multiplier for each pixel
-#define PIXEL_SIZE       10
+#define PIXEL_SIZE       30
 #define WINDOW_WIDTH     (CHIP8_DISP_WIDTH*PIXEL_SIZE)
 #define WINDOW_HEIGHT    (CHIP8_DISP_HEIGHT*PIXEL_SIZE)
 
