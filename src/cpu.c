@@ -66,7 +66,9 @@ void cpu_initialize(struct chip8 *chip8) {
 void cpu_update_timers(struct chip8 *cpu) {
     static int update_count = 0;
     // every 100 cpu ticks (because why not)
-    if (update_count == 100) {
+    // 60 Hz assuming 500 Hz clock speed
+    // TODO: Remove magic constants
+    if (update_count >= (500/60)) {
         if (cpu->dt) cpu->dt--;
         if (cpu->st) {
             cpu->st--;

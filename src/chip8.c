@@ -45,13 +45,14 @@ void chip8_disassemble(struct chip8 *chip8) {
 }
 
 void chip8_run(struct chip8 *chip8) {
-    // gfx_init();
-    while(cpu_execute(chip8)) {
-        // gfx_update(chip8->display);
+    gfx_init();
+    while (cpu_execute(chip8)) {
+        gfx_update(chip8->display);
         // random key press
-        chip8->keys = (uint16_t)(rand() % 0xFFFF);
+        // chip8->keys = (uint16_t)(rand() % 0xFFFF);
+        gfx_check_events(&chip8->keys);
     }
-    // gfx_quit();
+    gfx_quit();
 }
 
 void chip8_dbg_drw(struct chip8 *chip8) {
@@ -67,6 +68,6 @@ void chip8_dbg_drw(struct chip8 *chip8) {
         }
         printf("\n");
     }
-    for (int i = 0; i < 0xFFFFFFF; i++);
+    for (int i = 0; i < 0xFFFFF00; i++);
     // while (getchar() != '\n');
 }

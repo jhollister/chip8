@@ -283,9 +283,9 @@ void op_drw_vx_vy_nibble(struct chip8 *cpu, uint8_t regx, uint8_t regy, uint8_t 
         sprite_row = cpu->memory[addr++];
         y_pos = (y_pos + 1) % CHIP8_DISP_HEIGHT;
     }
-    cpu->pc += PC_STEP;
     cpu->v[0xF] = pixel_erased ? 1 : 0;
-    chip8_dbg_drw(cpu);
+    cpu->pc += PC_STEP;
+    // chip8_dbg_drw(cpu);
 }
 
 /*
@@ -414,10 +414,10 @@ void op_ld_vx_i(struct chip8 *cpu, uint8_t reg) {
 }
 
 void opcode0(struct chip8 *cpu, uint16_t opcode) {
-    if ( (opcode & 0x00FF) == 0xE0) {
+    if ((opcode & 0x00FF) == 0xE0) {
         op_cls(cpu);
     }
-    else if ( (opcode & 0x00FF) == 0xEE) {
+    else if ((opcode & 0x00FF) == 0xEE) {
         op_ret(cpu);
     }
     else {
